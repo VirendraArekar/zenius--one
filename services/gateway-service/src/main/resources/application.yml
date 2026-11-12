@@ -1,0 +1,44 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      server:
+        webflux:
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - http://localhost:5173
+                  - http://localhost:3000
+                  - http://localhost
+                allowedMethods: "*"
+                allowedHeaders: "*"
+                allowCredentials: true
+          routes:
+            - id: identity-org-service
+              uri: ${IDENTITY_ORG_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/v1/system/**,/api/v1/auth/**,/api/v1/org/**,/api/v1/organizations/**,/api/v1/branches/**,/api/v1/departments/**,/api/v1/members/**,/api/v1/roles/**,/api/v1/permissions/**,/api/v1/notifications/**,/api/v1/audit-logs/**,/api/v1/api-keys/**,/api/v1/security/**,/swagger-ui/**,/swagger-ui.html,/v3/api-docs/**
+            - id: customer-service
+              uri: ${CUSTOMER_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/v1/crm/**,/api/v1/marketing/**,/api/v1/support/**
+            - id: erp-people-service
+              uri: ${ERP_PEOPLE_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/v1/finance/**,/api/v1/billing/**,/api/v1/inventory/**,/api/v1/hr/**,/api/v1/recruitment/**,/api/v1/payroll/**
+            - id: workplace-ai-service
+              uri: ${WORKPLACE_AI_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/v1/projects/**,/api/v1/collab/**,/api/v1/docs/**,/api/v1/legal/**,/api/v1/analytics/**,/api/v1/creator/**,/api/v1/automation/**,/api/v1/ai/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+

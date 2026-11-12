@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.zenius</groupId>
+    <artifactId>zenius-one-microservices</artifactId>
+    <version>1.0.0-GA</version>
+    <packaging>pom</packaging>
+    <name>Zenius One Microservices</name>
+    <description>Multi-module Spring Boot + Spring Cloud Microservices Platform</description>
+
+    <modules>
+        <module>shared-kernel</module>
+        <module>gateway-service</module>
+        <module>identity-org-service</module>
+        <module>customer-service</module>
+        <module>erp-people-service</module>
+        <module>workplace-ai-service</module>
+    </modules>
+</project>
+
