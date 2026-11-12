@@ -1,0 +1,1437 @@
+{
+  "info": {
+    "_postman_id": "c1f72e39-a991-4c1d-8f2a-88e89bb073f1",
+    "name": "Zenius One Enterprise OS API Collection",
+    "description": "Comprehensive Postman collection for Zenius One Enterprise OS.\nCovers Spring Cloud Gateway (:8080) routing across all microservices:\n- Identity & Org Service (:8081)\n- Customer Service (:8082)\n- ERP & People Service (:8083)\n- Workplace & AI Service (:8084)\n\nIncludes Geo-Attendance Check-In/Check-Out, Leave Management, Quotes & Orders, Projects Kanban, Finance, Collab, BI Pulse, and AI Copilot.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@zeniusone.local",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Zenius@2026!",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "employeeId",
+      "value": "d9533db9-be80-4716-964c-e5497ba760d4",
+      "type": "string"
+    },
+    {
+      "key": "leaveId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "goalId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "quoteId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication & Session",
+      "item": [
+        {
+          "name": "Login (Auto-captures Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.session) {",
+                  "        pm.collectionVariables.set('accessToken', res.data.session.accessToken);",
+                  "        pm.collectionVariables.set('refreshToken', res.data.session.refreshToken);",
+                  "        console.log('Zenius One access token automatically set into collection variables.');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates user against Identity & Org Microservice (:8081). Automatically sets {{accessToken}} variable for subsequent requests."
+          }
+        },
+        {
+          "name": "Get Session Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/session",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "session"
+              ]
+            },
+            "description": "Returns authenticated user identity, role, permissions, and organizations."
+          }
+        },
+        {
+          "name": "Refresh Access Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. System & Microservices Health",
+      "item": [
+        {
+          "name": "System Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/system/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "system",
+                "status"
+              ]
+            },
+            "description": "Returns platform version, active DB engine, and microservice status."
+          }
+        },
+        {
+          "name": "Microservices Topology Map",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/system/microservices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "system",
+                "microservices"
+              ]
+            },
+            "description": "Lists all 5 Spring Boot microservices, target ports, and health status."
+          }
+        },
+        {
+          "name": "List Platform Modules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/system/modules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "system",
+                "modules"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. HR, Geo-Attendance & Leave Hub",
+      "item": [
+        {
+          "name": "List Employees",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.length > 0) {",
+                  "        pm.collectionVariables.set('employeeId', res.data[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/hr/employees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "employees"
+              ]
+            },
+            "description": "Returns employee roster with department, salary, and remaining annual leave balance."
+          }
+        },
+        {
+          "name": "Geo Check-In (GPS Coordinates & Office Geofence)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"latitude\": 40.7128,\n  \"longitude\": -74.006,\n  \"accuracy\": 12.5,\n  \"source\": \"GPS\",\n  \"locationLabel\": \"Zenius Global HQ (Office Geofence - Primary Campus)\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hr/attendance/check-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "attendance",
+                "check-in"
+              ]
+            },
+            "description": "Punches shift clock with live GPS coordinates, accuracy in meters, and location label."
+          }
+        },
+        {
+          "name": "Geo Check-Out (Departure GPS & Duration Calculator)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 40.7132,\n  \"longitude\": -74.0058\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hr/attendance/{{employeeId}}/check-out",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "attendance",
+                "{{employeeId}}",
+                "check-out"
+              ]
+            },
+            "description": "Records checkout GPS coordinates and automatically calculates total worked minutes for today's shift."
+          }
+        },
+        {
+          "name": "List Attendance Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/hr/attendance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "attendance"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Apply Leave Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.id) {",
+                  "        pm.collectionVariables.set('leaveId', res.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"leaveType\": \"ANNUAL\",\n  \"startDate\": \"2026-11-25\",\n  \"endDate\": \"2026-11-27\",\n  \"reason\": \"Executive leadership summit and Q4 roadmap planning\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hr/leaves",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "leaves"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Manager Decision on Leave (Approve/Reject)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"APPROVED\",\n  \"remarks\": \"Approved by Chief People Officer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hr/leaves/{{leaveId}}/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "leaves",
+                "{{leaveId}}",
+                "decision"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Employee Cancel Leave Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hr/leaves/{{leaveId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "leaves",
+                "{{leaveId}}",
+                "cancel"
+              ]
+            },
+            "description": "Allows employees to cancel pending leave requests with one click."
+          }
+        },
+        {
+          "name": "List Performance OKR Goals",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.length > 0) {",
+                  "        pm.collectionVariables.set('goalId', res.data[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/hr/goals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "goals"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update OKR Goal Progress Dynamically",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"progressPercent\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hr/goals/{{goalId}}/progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "goals",
+                "{{goalId}}",
+                "progress"
+              ]
+            },
+            "description": "Updates progress percentage (0-100%). Automatically marks goal as COMPLETED when reaching 100%."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. CRM & Sales Commercials",
+      "item": [
+        {
+          "name": "List CRM Leads",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/crm/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "crm",
+                "leads"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Lead",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Acme Ventures Inc\",\n  \"contactName\": \"Sarah Jenkins\",\n  \"email\": \"sarah@acmeventures.com\",\n  \"phone\": \"+1-212-555-0199\",\n  \"source\": \"WEBSITE\",\n  \"status\": \"QUALIFIED\",\n  \"estimatedValue\": 85000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/crm/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "crm",
+                "leads"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/crm/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "crm",
+                "accounts"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Deals & Pipeline",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/crm/deals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "crm",
+                "deals"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Products Catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/crm/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "crm",
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Product SKU",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"ZNS-CLOUD-ULTRA-01\",\n  \"name\": \"Zenius Cloud Enterprise Suite\",\n  \"category\": \"SAAS_LICENSE\",\n  \"unitPrice\": 12500,\n  \"taxRate\": 18\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/crm/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "crm",
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Quotes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.length > 0) {",
+                  "        pm.collectionVariables.set('quoteId', res.data[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/crm/quotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "crm",
+                "quotes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Dynamic Quote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Annual Cloud Architecture Package\",\n  \"items\": [\n    {\n      \"productName\": \"Zenius One Platform Core\",\n      \"quantity\": 5,\n      \"unitPrice\": 1200,\n      \"discountPercent\": 10,\n      \"taxRate\": 18\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/crm/quotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "crm",
+                "quotes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1-Click Convert Quote to Sales Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/crm/quotes/{{quoteId}}/convert",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "crm",
+                "quotes",
+                "{{quoteId}}",
+                "convert"
+              ]
+            },
+            "description": "Converts an accepted quote directly into a confirmed Sales Order and updates quote status to CONVERTED."
+          }
+        },
+        {
+          "name": "List Sales Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/crm/sales-orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "crm",
+                "sales-orders"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Customer Support & Knowledge Base",
+      "item": [
+        {
+          "name": "List Support Tickets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/support/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "support",
+                "tickets"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Support Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"SSO SAML Integration inquiry\",\n  \"priority\": \"HIGH\",\n  \"status\": \"OPEN\",\n  \"category\": \"INTEGRATION\",\n  \"contactEmail\": \"dev@customer.com\",\n  \"description\": \"Need assistance configuring Okta SAML 2.0 gateway relay\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/support/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "support",
+                "tickets"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Knowledge Base Articles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/support/kb/articles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "support",
+                "kb",
+                "articles"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Finance & Billing",
+      "item": [
+        {
+          "name": "Chart of Accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/finance/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "finance",
+                "accounts"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Invoices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/finance/invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "finance",
+                "invoices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Accounts Receivable Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Apex Technologies LLC\",\n  \"customerEmail\": \"billing@apextech.com\",\n  \"invoiceDate\": \"2026-11-12\",\n  \"dueDate\": \"2026-12-12\",\n  \"currency\": \"USD\",\n  \"items\": [\n    {\n      \"description\": \"Cloud Microservices Platform - Enterprise Tier\",\n      \"quantity\": 1,\n      \"unitPrice\": 4500,\n      \"taxRate\": 18\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/finance/invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "finance",
+                "invoices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Financial Report: Balance Sheet",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/finance/reports/balance-sheet",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "finance",
+                "reports",
+                "balance-sheet"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Financial Report: Income Statement",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/finance/reports/income-statement",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "finance",
+                "reports",
+                "income-statement"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Projects, Sprints, Kanban & Timesheets",
+      "item": [
+        {
+          "name": "List Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Global Payment Gateway Redesign\",\n  \"clientName\": \"Zenius Fintech\",\n  \"budgetAmount\": 75000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Tasks",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.length > 0) {",
+                  "        pm.collectionVariables.set('taskId', res.data[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects",
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Advance Kanban Task Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DONE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects/tasks/{{taskId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects",
+                "tasks",
+                "{{taskId}}",
+                "status"
+              ]
+            },
+            "description": "Advances task across columns: TODO -> IN_PROGRESS -> REVIEW -> DONE."
+          }
+        },
+        {
+          "name": "List Billable Time Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/time-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects",
+                "time-logs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Log Billable Work Time",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskId\": \"{{taskId}}\",\n  \"minutesLogged\": 90,\n  \"billable\": true,\n  \"notes\": \"Configured Kubernetes HPA autoscaling and microservices gateway routes\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects/time-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects",
+                "time-logs"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Workplace Collaboration & Webmail",
+      "item": [
+        {
+          "name": "List Webmail Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/collab/mail",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collab",
+                "mail"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Mail Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientEmail\": \"team@zeniusone.local\",\n  \"subject\": \"Q4 Enterprise Deployment Completed\",\n  \"body\": \"All microservices, GPS attendance, and Kubernetes HPA configurations are operational.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/collab/mail",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collab",
+                "mail"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Collab Channels",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/collab/channels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collab",
+                "channels"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Executive Analytics & BI Pulse",
+      "item": [
+        {
+          "name": "Get Executive Pulse (Cross-Service Real-Time Telemetry)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/pulse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "pulse"
+              ]
+            },
+            "description": "Aggregates real-time pipeline volume, invoiced revenue, workforce headcount, and open ticket metrics across microservices."
+          }
+        },
+        {
+          "name": "List BI Dashboards",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/dashboards",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "dashboards"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List BI Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "reports"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Zenius AI & Copilot",
+      "item": [
+        {
+          "name": "AI Copilot Chat Assistant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Summarize today's executive pipeline and attendance telemetry.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/chat",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "chat"
+              ]
+            }
+          }
+        },
+        {
+          "name": "AI Document Information Extraction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentText\": \"Invoice #INV-2026-901 for Apex Corp in the amount of $45,000 due December 1st.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/extract",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "extract"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
