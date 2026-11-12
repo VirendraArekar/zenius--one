@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: erp-people-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:zenius_one}
+    username: ${POSTGRES_USER:zenius}
+    password: ${POSTGRES_PASSWORD:zenius_dev_password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: ${FLYWAY_ENABLED:false}
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+zenius:
+  platform:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://localhost}
+  security:
+    jwt:
+      issuer: ${JWT_ISSUER:https://auth.zeniusone.local}
+      secret: ${JWT_SECRET:zenius-one-dev-signing-secret-must-be-at-least-64-characters-long-123456}
+      access-token-minutes: 15
+      refresh-token-days: 30
+
