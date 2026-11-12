@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:${ZENIUS_DATA_DIR:./.zenius-data}/zenius_ms;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+zenius:
+  events:
+    broker: ${ZENIUS_EVENTS_BROKER:local}
+  mail:
+    smtp:
+      enabled: ${ZENIUS_SMTP_ENABLED:false}
+    from: ${ZENIUS_MAIL_FROM:noreply@zeniusone.local}
+
