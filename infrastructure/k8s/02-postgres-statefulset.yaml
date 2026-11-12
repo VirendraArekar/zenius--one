@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zenius-postgres
+  namespace: zenius-one
+  labels:
+    app: zenius-postgres
+    app.kubernetes.io/part-of: zenius-one-os
+spec:
+  serviceName: zenius-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zenius-postgres
+  template:
+    metadata:
+      labels:
+        app: zenius-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg16
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - configMapRef:
+                name: zenius-config
+            - secretRef:
+                name: zenius-secrets
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zenius-postgres
+  namespace: zenius-one
+  labels:
+    app: zenius-postgres
+    app.kubernetes.io/part-of: zenius-one-os
+spec:
+  selector:
+    app: zenius-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+

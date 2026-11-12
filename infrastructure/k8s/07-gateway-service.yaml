@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zenius-gateway-service
+  namespace: zenius-one
+  labels:
+    app: zenius-gateway-service
+    app.kubernetes.io/part-of: zenius-one-os
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: zenius-gateway-service
+  template:
+    metadata:
+      labels:
+        app: zenius-gateway-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: gateway-service
+          image: zenius-one/gateway-service:1.0.0-GA
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: zenius-config
+            - secretRef:
+                name: zenius-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+            - name: IDENTITY_ORG_URL
+              value: "http://zenius-identity-org-service:8081"
+            - name: CUSTOMER_URL
+              value: "http://zenius-customer-service:8082"
+            - name: ERP_PEOPLE_URL
+              value: "http://zenius-erp-people-service:8083"
+            - name: WORKPLACE_AI_URL
+              value: "http://zenius-workplace-ai-service:8084"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "384Mi"
+            limits:
+              cpu: "1"
+              memory: "768Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zenius-gateway-service
+  namespace: zenius-one
+  labels:
+    app: zenius-gateway-service
+    app.kubernetes.io/part-of: zenius-one-os
+spec:
+  selector:
+    app: zenius-gateway-service
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: zenius-gateway-service-hpa
+  namespace: zenius-one
+  labels:
+    app: zenius-gateway-service
+    app.kubernetes.io/part-of: zenius-one-os
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: zenius-gateway-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 2
+          periodSeconds: 15
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+

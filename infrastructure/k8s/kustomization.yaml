@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: zenius-one
+
+resources:
+  - 00-namespace.yaml
+  - 01-configmap-secrets.yaml
+  - 02-postgres-statefulset.yaml
+  - 03-identity-org-service.yaml
+  - 04-customer-service.yaml
+  - 05-erp-people-service.yaml
+  - 06-workplace-ai-service.yaml
+  - 07-gateway-service.yaml
+  - 08-frontend-and-ingress.yaml
+

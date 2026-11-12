@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zenius-workplace-ai-service
+  namespace: zenius-one
+  labels:
+    app: zenius-workplace-ai-service
+    app.kubernetes.io/part-of: zenius-one-os
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: zenius-workplace-ai-service
+  template:
+    metadata:
+      labels:
+        app: zenius-workplace-ai-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8084"
+    spec:
+      containers:
+        - name: workplace-ai-service
+          image: zenius-one/workplace-ai-service:1.0.0-GA
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+              name: http
+          envFrom:
+            - configMapRef:
+                name: zenius-config
+            - secretRef:
+                name: zenius-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8084"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8084
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8084
+            initialDelaySeconds: 45
+            periodSeconds: 20
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zenius-workplace-ai-service
+  namespace: zenius-one
+  labels:
+    app: zenius-workplace-ai-service
+    app.kubernetes.io/part-of: zenius-one-os
+spec:
+  selector:
+    app: zenius-workplace-ai-service
+  ports:
+    - port: 8084
+      targetPort: 8084
+      name: http
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: zenius-workplace-ai-service-hpa
+  namespace: zenius-one
+  labels:
+    app: zenius-workplace-ai-service
+    app.kubernetes.io/part-of: zenius-one-os
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: zenius-workplace-ai-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 2
+          periodSeconds: 15
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+
