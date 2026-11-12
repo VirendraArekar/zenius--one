@@ -1,0 +1,25 @@
+# OS & IDE
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Backend (Maven / Java)
+backend/target/
+services/*/target/
+.zenius-data/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.log
+
+# Frontend (Node / Vite / Playwright)
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+
